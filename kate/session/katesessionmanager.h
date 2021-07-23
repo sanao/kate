@@ -61,17 +61,7 @@ public:
     /**
      * activate existing anonymous session
      */
-    bool activateAnonymousSession();
-
-    /**
-     * create and activate new session and store it as anonymous
-     */
-    void activateNewSession();
-
-    /**
-     * create and activate new session from another \p session as template
-     */
-    void activateNewSessionFrom(const KateSession::Ptr &session);
+    void activateDefaultSession();
 
     /**
      * save current session
@@ -112,12 +102,6 @@ public:
 
 public Q_SLOTS:
     /**
-     * try to start a new session
-     * asks user first for name
-     */
-    void sessionNew();
-
-    /**
      * try to save current session
      */
     void sessionSave();
@@ -131,11 +115,6 @@ public Q_SLOTS:
      * show dialog to manage our sessions
      */
     void sessionManage();
-
-    /**
-     * save current configuration as session defaults
-     */
-    void saveDefaults();
 
 Q_SIGNALS:
     /**
@@ -234,11 +213,6 @@ private:
      * returns session config file according to policy
      */
     QString sessionFileForName(const QString &name) const;
-
-    /**
-     * returns session file for anonymous session
-     */
-    QString anonymousSessionFile() const;
 
     /**
      * returns session file for anonymous session

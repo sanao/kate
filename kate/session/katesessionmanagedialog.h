@@ -56,16 +56,6 @@ protected Q_SLOTS:
     void openSession();
 
     /**
-     * Use the selected session as template for a new session
-     */
-    void openSessionAsTemplate();
-
-    /**
-     * Open new anonymous session
-     */
-    void openNewSession();
-
-    /**
      * Copy the selected session
      */
     void copySession();

@@ -183,16 +183,13 @@ void KateConfigDialog::addSessionPage()
     sessionConfigUi.spinBoxRecentFilesCount->setValue(recentFilesMaxCount());
     connect(sessionConfigUi.spinBoxRecentFilesCount, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &KateConfigDialog::slotChanged);
 
-    QString sesStart(cgGeneral.readEntry("Startup Session", "manual"));
-    if (sesStart == QLatin1String("new")) {
-        sessionConfigUi.startNewSessionRadioButton->setChecked(true);
-    } else if (sesStart == QLatin1String("last")) {
+    QString sesStart(cgGeneral.readEntry("Startup Session", "last"));
+    if (sesStart == QLatin1String("last")) {
         sessionConfigUi.loadLastUserSessionRadioButton->setChecked(true);
     } else {
         sessionConfigUi.manuallyChooseSessionRadioButton->setChecked(true);
     }
 
-    connect(sessionConfigUi.startNewSessionRadioButton, &QRadioButton::toggled, this, &KateConfigDialog::slotChanged);
     connect(sessionConfigUi.loadLastUserSessionRadioButton, &QRadioButton::toggled, this, &KateConfigDialog::slotChanged);
     connect(sessionConfigUi.manuallyChooseSessionRadioButton, &QRadioButton::toggled, this, &KateConfigDialog::slotChanged);
 
@@ -315,9 +312,7 @@ void KateConfigDialog::slotApply()
 
         cg.writeEntry("Recent File List Entry Count", sessionConfigUi.spinBoxRecentFilesCount->value());
 
-        if (sessionConfigUi.startNewSessionRadioButton->isChecked()) {
-            cg.writeEntry("Startup Session", "new");
-        } else if (sessionConfigUi.loadLastUserSessionRadioButton->isChecked()) {
+        if (sessionConfigUi.loadLastUserSessionRadioButton->isChecked()) {
             cg.writeEntry("Startup Session", "last");
         } else {
             cg.writeEntry("Startup Session", "manual");

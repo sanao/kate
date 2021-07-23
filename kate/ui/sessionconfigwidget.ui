@@ -18,13 +18,6 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="QRadioButton" name="startNewSessionRadioButton">
-        <property name="text">
-         <string>&amp;Start new session</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QRadioButton" name="loadLastUserSessionRadioButton">
         <property name="text">
          <string>&amp;Load last used session</string>

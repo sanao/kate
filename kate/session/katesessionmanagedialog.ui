@@ -93,23 +93,6 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="m_newButton">
-           <property name="text">
-            <string>New Session</string>
-           </property>
-           <property name="icon">
-            <iconset theme="list-add"/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="m_templateButton">
-           <property name="text">
-            <string>Open as Template</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QCheckBox" name="m_dontAskCheckBox">
            <property name="text">
             <string>Don't ask again</string>
@@ -221,8 +204,6 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>m_newButton</tabstop>
-  <tabstop>m_templateButton</tabstop>
   <tabstop>m_dontAskCheckBox</tabstop>
   <tabstop>m_copyButton</tabstop>
   <tabstop>m_renameButton</tabstop>

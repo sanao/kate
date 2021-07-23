@@ -37,13 +37,9 @@ KateSessionManageDialog::KateSessionManageDialog(QWidget *parent)
     m_filterBox->installEventFilter(this);
     connect(m_filterBox, &QLineEdit::textChanged, this, &KateSessionManageDialog::filterChanged);
 
-    connect(m_newButton, &QPushButton::clicked, this, &KateSessionManageDialog::openNewSession);
-
     KGuiItem::assign(m_openButton, KStandardGuiItem::open());
     m_openButton->setDefault(true);
     connect(m_openButton, &QPushButton::clicked, this, &KateSessionManageDialog::openSession);
-
-    connect(m_templateButton, &QPushButton::clicked, this, &KateSessionManageDialog::openSessionAsTemplate);
 
     connect(m_copyButton, &QPushButton::clicked, this, &KateSessionManageDialog::copySession);
 
@@ -73,7 +69,6 @@ KateSessionManageDialog::KateSessionManageDialog(QWidget *parent, const QString 
 
 void KateSessionManageDialog::dontAskToggled()
 {
-    m_templateButton->setEnabled(!m_dontAskCheckBox->isChecked());
 }
 
 void KateSessionManageDialog::filterChanged()
@@ -133,7 +128,6 @@ void KateSessionManageDialog::selectionChanged(QTreeWidgetItem *current, QTreeWi
 
     if (!current) {
         m_openButton->setEnabled(false);
-        m_templateButton->setEnabled(false);
         m_copyButton->setEnabled(false);
         m_renameButton->setEnabled(false);
         m_deleteButton->setEnabled(false);
@@ -148,13 +142,11 @@ void KateSessionManageDialog::selectionChanged(QTreeWidgetItem *current, QTreeWi
     if (m_deleteList.contains(currentSelectedSession())) {
         m_deleteButton->setText(i18n("Restore"));
         m_openButton->setEnabled(false);
-        m_templateButton->setEnabled(false);
         m_copyButton->setEnabled(true); // Looks a little strange but is OK
         m_renameButton->setEnabled(false);
     } else {
         KGuiItem::assign(m_deleteButton, KStandardGuiItem::del());
         m_openButton->setEnabled(currentSelectedSession() != activeSession);
-        m_templateButton->setEnabled(true);
         m_copyButton->setEnabled(true);
         m_renameButton->setEnabled(true);
     }
@@ -163,8 +155,6 @@ void KateSessionManageDialog::selectionChanged(QTreeWidgetItem *current, QTreeWi
 void KateSessionManageDialog::disableButtons()
 {
     m_openButton->setEnabled(false);
-    m_newButton->setEnabled(false);
-    m_templateButton->setEnabled(false);
     m_dontAskCheckBox->setEnabled(false);
     m_copyButton->setEnabled(false);
     m_renameButton->setEnabled(false);
@@ -204,7 +194,6 @@ void KateSessionManageDialog::editDone()
     disconnect(m_sessionList, &QTreeWidget::itemChanged, this, &KateSessionManageDialog::editApply);
     updateSessionList();
 
-    m_newButton->setEnabled(true);
     m_dontAskCheckBox->setEnabled(true);
     m_closeButton->setEnabled(true);
     m_filterBox->setEnabled(true);
@@ -247,28 +236,6 @@ void KateSessionManageDialog::openSession()
     // this might fail, e.g. if session is in use, then e.g. end kate, bug 390740
     const bool success = KateApp::self()->sessionManager()->activateSession(item->session);
     done(success ? ResultOpen : ResultQuit);
-}
-
-void KateSessionManageDialog::openSessionAsTemplate()
-{
-    KateSessionChooserItem *item = currentSessionItem();
-
-    if (!item) {
-        return;
-    }
-
-    hide();
-
-    KateApp::self()->sessionManager()->activateNewSessionFrom(item->session);
-
-    done(ResultOpen);
-}
-
-void KateSessionManageDialog::openNewSession()
-{
-    hide();
-    KateApp::self()->sessionManager()->sessionNew();
-    done(ResultNew);
 }
 
 void KateSessionManageDialog::updateDeleteList()
@@ -373,11 +340,7 @@ void KateSessionManageDialog::updateSessionList()
         return;
     }
 
-    if (m_sessionList->topLevelItemCount() == 0) {
-        m_newButton->setFocus();
-    } else {
-        m_sessionList->setFocus();
-    }
+    m_sessionList->setFocus();
 }
 
 KateSessionChooserItem *KateSessionManageDialog::currentSessionItem() const
