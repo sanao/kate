@@ -36,14 +36,10 @@ public:
               std::cerr<<"property:"<<qPrintable(a_s.toString())<<std::endl;
               std::cerr<<qPrintable(QDBusConnection::sessionBus().lastError().message())<<std::endl;*/
         if (!a_s.isValid()) {
-            sessionName = QStringLiteral("___NO_SESSION_OPENED__%1").arg(dummy_session++);
+            sessionId = QStringLiteral("___NO_SESSION_OPENED__%1").arg(dummy_session++);
             valid = false;
         } else {
-            if (a_s.toString().isEmpty()) {
-                sessionName = QStringLiteral("___DEFAULT_CONSTRUCTED_SESSION__%1").arg(dummy_session++);
-            } else {
-                sessionName = a_s.toString();
-            }
+            sessionId = a_s.toString();
             valid = true;
         }
     }
@@ -51,7 +47,7 @@ public:
     bool valid = false;
     const QString serviceName;
     std::unique_ptr<QDBusInterface> dbus_if;
-    QString sessionName;
+    QString sessionId;
 
 private:
     static inline int dummy_session = 0;

@@ -35,11 +35,11 @@ bool fillinRunningKateAppInstances(KateRunningInstanceMap *map)
         if (s.startsWith(QLatin1String("org.kde.kate")) && !s.endsWith(my_pid)) {
             KateRunningInstanceInfo rii(s);
             if (rii.valid) {
-                if (map->find(rii.sessionName) != map->end()) {
+                if (map->find(rii.sessionId) != map->end()) {
                     return false; // ERROR no two instances may have the same session name
                 }
-                auto sessionName = rii.sessionName;
-                map->emplace(sessionName, std::move(rii));
+                auto sessionId = rii.sessionId;
+                map->emplace(sessionId, std::move(rii));
                 // std::cerr<<qPrintable(s)<<"running instance:"<< rii->sessionName.toUtf8().data()<<std::endl;
             }
         }

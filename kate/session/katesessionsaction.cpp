@@ -49,7 +49,7 @@ void KateSessionsAction::slotAboutToShow()
         QString sessionName = session->name();
         sessionName.replace(QStringLiteral("&"), QStringLiteral("&&"));
         QAction *action = new QAction(sessionName, sessionsGroup);
-        action->setData(QVariant(session->name()));
+        action->setData(QVariant(session->id()));
         action->setCheckable(true);
         action->setChecked(session == m_manager->activeSession());
         menu()->addAction(action);
@@ -58,8 +58,8 @@ void KateSessionsAction::slotAboutToShow()
 
 void KateSessionsAction::openSession(QAction *action)
 {
-    const QString name = action->data().toString();
-    m_manager->activateSession(name);
+    const QString id = action->data().toString();
+    m_manager->activateSessionById(id);
 }
 
 void KateSessionsAction::slotSessionChanged()

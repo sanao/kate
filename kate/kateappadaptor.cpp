@@ -107,7 +107,7 @@ bool KateAppAdaptor::openInput(const QString &text, const QString &encoding)
 
 bool KateAppAdaptor::activateSession(const QString &session)
 {
-    return m_app->sessionManager()->activateSession(session);
+    return m_app->sessionManager()->activateSessionByName(session);
 }
 
 int KateAppAdaptor::desktopNumber()
@@ -118,7 +118,7 @@ int KateAppAdaptor::desktopNumber()
 
 QString KateAppAdaptor::activeSession()
 {
-    return m_app->sessionManager()->activeSession()->name();
+    return m_app->sessionManager()->activeSession()->id();
 }
 
 void KateAppAdaptor::emitExiting()

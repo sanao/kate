@@ -39,6 +39,11 @@ public:
         return m_name;
     }
 
+    void setName(const QString &name)
+    {
+        m_name = name;
+    }
+
     /**
      * session config
      * on first access, will create the config object, delete will be done automagic
@@ -64,19 +69,6 @@ public:
     void setDocuments(const unsigned int number);
 
     /**
-     * @return true if this is anonymous/new session
-     */
-    bool isAnonymous() const
-    {
-        return m_anonymous;
-    }
-
-    /**
-     * @return path to session file
-     */
-    const QString &file() const;
-
-    /**
      * returns last save time of this session
      */
     const QDateTime &timestamp() const
@@ -84,46 +76,35 @@ public:
         return m_timestamp;
     }
 
+    const QString &id() const
+    {
+        return m_id;
+    }
+
     /**
      * Factories
      */
 public:
-    static KateSession::Ptr create(const QString &file, const QString &name);
-    static KateSession::Ptr createFrom(const KateSession::Ptr &session, const QString &file, const QString &name);
-    static KateSession::Ptr createAnonymous(const QString &file);
-    static KateSession::Ptr createAnonymousFrom(const KateSession::Ptr &session, const QString &file);
+    static KateSession::Ptr create();
+    static KateSession::Ptr create(const QString &id, KConfig *config);
+    static KateSession::Ptr duplicate(KateSession::Ptr session, const QString &name = QString());
 
     static bool compareByName(const KateSession::Ptr &s1, const KateSession::Ptr &s2);
     static bool compareByTimeDesc(const KateSession::Ptr &s1, const KateSession::Ptr &s2);
 
 private:
-    friend class KateSessionManager;
-    friend class KateSessionTest;
-    /**
-     * set session name
-     */
-    void setName(const QString &name);
-
-    /**
-     * set's new session file to @filename
-     */
-    void setFile(const QString &filename);
-
     /**
      * create a session from given @file
-     * @param file configuration file
-     * @param name name of this session
-     * @param anonymous anonymous flag
+     * @param id id of session
      * @param config if specified, the session will copy configuration from the KConfig instead of opening the file
      */
-    KateSession(const QString &file, const QString &name, const bool anonymous, const KConfig *config = nullptr);
+    KateSession(const QString &id, KConfig *config);
 
 private:
+    QString m_id;
     QString m_name;
-    QString m_file;
-    bool m_anonymous;
     unsigned int m_documents;
-    std::unique_ptr<KConfig> m_config;
+    KConfig *m_config;
     QDateTime m_timestamp;
 };
 

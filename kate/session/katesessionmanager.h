@@ -56,12 +56,9 @@ public:
      * @param loadNew load new session stuff?
      * @return false==session has been delegated, true==session has been activated in this distance
      */
-    bool activateSession(const QString &name, const bool closeAndSaveLast = true, const bool loadNew = true);
-
-    /**
-     * activate existing anonymous session
-     */
-    bool activateAnonymousSession();
+    // bool activateSession(const QString &name, const bool closeAndSaveLast = true, const bool loadNew = true);
+    bool activateSessionById(const QString &id, const bool closeAndSaveLast = true, const bool loadNew = true);
+    bool activateSessionByName(const QString &name);
 
     /**
      * create and activate new session and store it as anonymous
@@ -93,7 +90,7 @@ public:
     /**
      * @return true when @p session is active in any Kate instance, otherwise false
      */
-    bool sessionIsActive(const QString &session);
+    bool sessionIsActive(const KateSession::Ptr session);
 
     /**
      * session dir
@@ -113,7 +110,6 @@ public:
 public Q_SLOTS:
     /**
      * try to start a new session
-     * asks user first for name
      */
     void sessionNew();
 
@@ -131,11 +127,6 @@ public Q_SLOTS:
      * show dialog to manage our sessions
      */
     void sessionManage();
-
-    /**
-     * save current configuration as session defaults
-     */
-    void saveDefaults();
 
 Q_SIGNALS:
     /**
@@ -206,13 +197,16 @@ private:
      * if no existing session matches, create new one with this name
      * @param name session name
      */
-    KateSession::Ptr giveSession(const QString &name);
+    KateSession::Ptr giveSessionX(const QString &id);
 
     /**
      * Create new session from defaults
      * @param name session name
      */
-    KateSession::Ptr createSession(const QString &name);
+    KateSession::Ptr createSession();
+    KateSession::Ptr createSessionFrom(KateSession::Ptr session);
+
+    KateSession::Ptr createSession(KateSession::Ptr session);
 
     /**
      * Ask the user for a new session name, when needed.
@@ -223,6 +217,8 @@ private:
      */
     QString askForNewSessionName(KateSession::Ptr session, const QString &newName = QString());
 
+    KateSession::Ptr sessionByName(const QString &name) const;
+
     /**
      * Try to generate a new session name from @p target by a number suffix.
      * @param target is the base name
@@ -231,24 +227,9 @@ private:
     QString suggestNewSessionName(const QString &target);
 
     /**
-     * returns session config file according to policy
-     */
-    QString sessionFileForName(const QString &name) const;
-
-    /**
-     * returns session file for anonymous session
-     */
-    QString anonymousSessionFile() const;
-
-    /**
-     * returns session file for anonymous session
-     */
-    QString defaultSessionFile() const;
-
-    /**
      * helper function to save the session to a given config object
      */
-    void saveSessionTo(KConfig *sc) const;
+    void saveSessionTo(KConfig *sc);
 
     /**
      * restore sessions documents, windows, etc...
@@ -272,6 +253,15 @@ private:
      *  until its tab is activated.
      */
     static bool isViewLessDocumentViewSpaceGroup(const QString &group);
+
+    void writeSession(const KateSession::Ptr session);
+    KateSession::Ptr readSession(const QString &id);
+
+    /**
+     * returns session config file according to policy
+     */
+    QString sessionFileForId(const QString &id) const;
+    QString sessionFile(const KateSession::Ptr session) const;
 
 private:
     /**

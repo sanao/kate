@@ -382,7 +382,7 @@ int main(int argc, char **argv)
         bool session_already_opened = false;
 
         // check if we try to start an already opened session
-        if (parser.isSet(startAnonymousSessionOption) || parser.isSet(startNewSessionOption)) {
+        if (parser.isSet(startNewSessionOption)) {
             force_new = true;
         } else if (parser.isSet(startSessionOption)) {
             start_session = parser.value(startSessionOption);

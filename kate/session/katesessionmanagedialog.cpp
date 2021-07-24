@@ -141,7 +141,7 @@ void KateSessionManageDialog::selectionChanged(QTreeWidgetItem *current, QTreeWi
     }
 
     const KateSession::Ptr activeSession = KateApp::self()->sessionManager()->activeSession();
-    const bool notActiveSession = !KateApp::self()->sessionManager()->sessionIsActive(currentSelectedSession()->name());
+    const bool notActiveSession = !KateApp::self()->sessionManager()->sessionIsActive(currentSelectedSession());
 
     m_deleteButton->setEnabled(notActiveSession);
 

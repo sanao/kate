@@ -16,16 +16,18 @@
 #include <QCollator>
 #include <QFile>
 #include <QFileInfo>
+#include <QUuid>
+
+#include "namegenerator.h"
 
 static const QLatin1String opGroupName("Open Documents");
 static const QLatin1String keyCount("Count");
 
-KateSession::KateSession(const QString &file, const QString &name, const bool anonymous, const KConfig *_config)
-    : m_name(name)
-    , m_file(file)
-    , m_anonymous(anonymous)
-    , m_documents(0)
+KateSession::KateSession(const QString &id, KConfig *config)
+    : m_id(id)
+    , m_config(config)
 {
+#if false
     Q_ASSERT(!m_file.isEmpty());
 
     if (_config) { // copy data from config instead
@@ -36,14 +38,15 @@ KateSession::KateSession(const QString &file, const QString &name, const bool an
     }
 
     m_timestamp = QFileInfo(m_file).lastModified();
+#endif
 
     // get the document count
-    m_documents = config()->group(opGroupName).readEntry(keyCount, 0);
-}
+    m_documents = config->group(opGroupName).readEntry(keyCount, 0);
 
-const QString &KateSession::file() const
-{
-    return m_file;
+    m_name = config->group(QLatin1String("meta")).readEntry(QLatin1String("Name"), QString());
+    if (m_name.isEmpty()) {
+        m_name = getRandomName();
+    }
 }
 
 void KateSession::setDocuments(const unsigned int number)
@@ -52,6 +55,7 @@ void KateSession::setDocuments(const unsigned int number)
     m_documents = number;
 }
 
+#if false
 void KateSession::setFile(const QString &filename)
 {
     if (m_config) {
@@ -61,40 +65,32 @@ void KateSession::setFile(const QString &filename)
 
     m_file = filename;
 }
-
-void KateSession::setName(const QString &name)
-{
-    m_name = name;
-}
+#endif
 
 KConfig *KateSession::config()
 {
-    if (!m_config) {
-        // reread documents number?
-        m_config = std::make_unique<KConfig>(m_file, KConfig::SimpleConfig);
-    }
-
-    return m_config.get();
+    return m_config;
 }
 
-KateSession::Ptr KateSession::create(const QString &file, const QString &name)
+KateSession::Ptr KateSession::create()
 {
-    return Ptr(new KateSession(file, name, false));
+    const QString rnd = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    KConfig *config = new KConfig();
+    return Ptr(new KateSession(rnd, config));
 }
 
-KateSession::Ptr KateSession::createFrom(const KateSession::Ptr &session, const QString &file, const QString &name)
+KateSession::Ptr KateSession::create(const QString &id, KConfig *config)
 {
-    return Ptr(new KateSession(file, name, false, session->config()));
+    return Ptr(new KateSession(id, config));
 }
 
-KateSession::Ptr KateSession::createAnonymous(const QString &file)
+KateSession::Ptr KateSession::duplicate(KateSession::Ptr session, const QString &name)
 {
-    return Ptr(new KateSession(file, AnonymousSessionName, true));
-}
+    const QString rnd = QUuid::createUuid().toString();
+    // FIXME: dupe kconfig here
+    KateSession *s = new KateSession(rnd, session->config());
 
-KateSession::Ptr KateSession::createAnonymousFrom(const KateSession::Ptr &session, const QString &file)
-{
-    return Ptr(new KateSession(file, AnonymousSessionName, true, session->config()));
+    return Ptr(s);
 }
 
 bool KateSession::compareByName(const KateSession::Ptr &s1, const KateSession::Ptr &s2)
