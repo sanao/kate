@@ -18,7 +18,10 @@
 
 class KConfig;
 
-static const QLatin1String AnonymousSessionName("Anonymous");
+namespace Kate::Session
+{
+class Store;
+}
 
 class KATE_TESTS_EXPORT KateSession : public QSharedData
 {
@@ -39,10 +42,7 @@ public:
         return m_name;
     }
 
-    void setName(const QString &name)
-    {
-        m_name = name;
-    }
+    void setName(const QString &name);
 
     /**
      * session config
@@ -85,14 +85,12 @@ public:
      * Factories
      */
 public:
-    static KateSession::Ptr create();
-    static KateSession::Ptr create(const QString &id, KConfig *config);
-    static KateSession::Ptr duplicate(KateSession::Ptr session, const QString &name = QString());
-
     static bool compareByName(const KateSession::Ptr &s1, const KateSession::Ptr &s2);
     static bool compareByTimeDesc(const KateSession::Ptr &s1, const KateSession::Ptr &s2);
 
 private:
+    friend class Kate::Session::Store;
+
     /**
      * create a session from given @file
      * @param id id of session
@@ -100,11 +98,16 @@ private:
      */
     KateSession(const QString &id, KConfig *config);
 
+    void setTimestamp(const QDateTime &ts = QDateTime::currentDateTime())
+    {
+        m_timestamp = ts;
+    }
+
 private:
     QString m_id;
     QString m_name;
     unsigned int m_documents;
-    KConfig *m_config;
+    std::unique_ptr<KConfig> m_config;
     QDateTime m_timestamp;
 };
 

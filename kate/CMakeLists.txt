@@ -69,6 +69,7 @@ target_sources(
     session/katesessionmanagedialog.cpp
     session/katesessionmanager.cpp
     session/katesessionsaction.cpp
+    session/store.cpp
 
     quickopen/katequickopen.cpp
     quickopen/katequickopenmodel.cpp

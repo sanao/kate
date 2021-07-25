@@ -9,8 +9,7 @@
 #define __KATE_SESSION_MANAGER_H__
 
 #include "katesession.h"
-
-#include <KDirWatch>
+#include "store.h"
 
 #include <QHash>
 #include <QObject>
@@ -82,7 +81,7 @@ public:
      * sessionFile == empty means we have no session around for this instance of kate
      * @return session active atm
      */
-    KateSession::Ptr activeSession()
+    KateSession::Ptr activeSession() const
     {
         return m_activeSession;
     }
@@ -91,15 +90,6 @@ public:
      * @return true when @p session is active in any Kate instance, otherwise false
      */
     bool sessionIsActive(const KateSession::Ptr session);
-
-    /**
-     * session dir
-     * @return global session dir
-     */
-    const QString &sessionsDir() const
-    {
-        return m_sessionsDir;
-    }
 
     /**
      * initial session chooser, on app start
@@ -193,22 +183,6 @@ private Q_SLOTS:
 
 private:
     /**
-     * return session with given name
-     * if no existing session matches, create new one with this name
-     * @param name session name
-     */
-    KateSession::Ptr giveSessionX(const QString &id);
-
-    /**
-     * Create new session from defaults
-     * @param name session name
-     */
-    KateSession::Ptr createSession();
-    KateSession::Ptr createSessionFrom(KateSession::Ptr session);
-
-    KateSession::Ptr createSession(KateSession::Ptr session);
-
-    /**
      * Ask the user for a new session name, when needed.
      * @param session is the session to rename or copy
      * @param newName is a preset value. Is @p newName not already in use is nothing asked
@@ -217,19 +191,17 @@ private:
      */
     QString askForNewSessionName(KateSession::Ptr session, const QString &newName = QString());
 
-    KateSession::Ptr sessionByName(const QString &name) const;
-
     /**
      * Try to generate a new session name from @p target by a number suffix.
      * @param target is the base name
      * @return a (currently) not used session name or an empty string
      */
-    QString suggestNewSessionName(const QString &target);
+    QString suggestNewSessionName(const QString &target) const;
 
     /**
      * helper function to save the session to a given config object
      */
-    void saveSessionTo(KConfig *sc);
+    void saveSessionTo(KConfig *sc) const;
 
     /**
      * restore sessions documents, windows, etc...
@@ -239,7 +211,7 @@ private:
     /**
      * Writes sessions as jump list actions to the kate.desktop file
      */
-    void updateJumpListActions(const QStringList &sessionList);
+    void updateJumpListActions() const;
 
     /**
      * Given a config group name, determines if the group represents
@@ -254,32 +226,13 @@ private:
      */
     static bool isViewLessDocumentViewSpaceGroup(const QString &group);
 
-    void writeSession(const KateSession::Ptr session);
-    KateSession::Ptr readSession(const QString &id);
-
-    /**
-     * returns session config file according to policy
-     */
-    QString sessionFileForId(const QString &id) const;
-    QString sessionFile(const KateSession::Ptr session) const;
-
 private:
-    /**
-     * absolute path to dir in home dir where to store the sessions
-     */
-    QString m_sessionsDir;
-
-    /**
-     * list of current available sessions
-     */
-    QHash<QString, KateSession::Ptr> m_sessions;
-
     /**
      * current active session
      */
     KateSession::Ptr m_activeSession;
 
-    std::unique_ptr<KDirWatch> m_dirWatch;
+    Kate::Session::Store m_store;
 };
 
 #endif
