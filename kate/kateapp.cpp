@@ -8,6 +8,7 @@
 #include "kateapp.h"
 
 #include "kateviewmanager.h"
+#include "session/store.h"
 
 #include <KConfigGroup>
 #include <KConfigGui>
@@ -46,13 +47,13 @@ static KateApp *appSelf = Q_NULLPTR;
 
 Q_LOGGING_CATEGORY(LOG_KATE, "kate", QtWarningMsg)
 
-KateApp::KateApp(const QCommandLineParser &args)
+KateApp::KateApp(const QCommandLineParser &args, Kate::Session::Store *store)
     : m_args(args)
     , m_wrapper(appSelf = this)
     , m_docManager(this)
     , m_adaptor(this)
     , m_pluginManager(this)
-    , m_sessionManager(this)
+    , m_sessionManager(this, store)
     , m_stashManager(this)
 {
     /**

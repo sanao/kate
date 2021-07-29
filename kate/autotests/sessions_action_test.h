@@ -10,6 +10,11 @@
 
 #include <QObject>
 
+namespace Kate::Session
+{
+class Store;
+}
+
 class KateSessionsActionTest : public QObject
 {
     Q_OBJECT
@@ -29,6 +34,7 @@ private:
     class KateSessionManager *m_manager;
     class KateApp *m_app; // dependency, sigh...
     class KateSessionsAction *m_ac;
+    class Kate::Session::Store *m_store;
 };
 
 #endif

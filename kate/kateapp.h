@@ -34,6 +34,11 @@ class KateAppCommands;
 class KateAppAdaptor;
 class QCommandLineParser;
 
+namespace Kate::Session
+{
+class Store;
+}
+
 /**
  * Kate Application
  * This class represents the core kate application object
@@ -49,7 +54,7 @@ public:
     /**
      * application constructor
      */
-    KateApp(const QCommandLineParser &args);
+    KateApp(const QCommandLineParser &args, Kate::Session::Store *store = nullptr);
 
     /**
      * get kate inited

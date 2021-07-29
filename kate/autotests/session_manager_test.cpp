@@ -8,12 +8,17 @@
 #include "session_manager_test.h"
 #include "kateapp.h"
 #include "katesessionmanager.h"
+#include "session/store.h"
 
 #include <KConfig>
 #include <KConfigGroup>
+#include <KSharedConfig>
 
 #include <QCommandLineParser>
+#include <QStandardPaths>
 #include <QTemporaryDir>
+#include <QTemporaryFile>
+#include <QTimer>
 #include <QtTestWidgets>
 
 QTEST_MAIN(KateSessionManagerTest)
@@ -25,158 +30,257 @@ void KateSessionManagerTest::initTestCase()
      */
     Q_INIT_RESOURCE(kate);
 
-    // we need an application object, as session loading will trigger modifications to that
-    m_app = new KateApp(QCommandLineParser());
-    m_app->sessionManager()->activateAnonymousSession();
-}
-
-void KateSessionManagerTest::cleanupTestCase()
-{
-    delete m_app;
+    QStandardPaths::setTestModeEnabled(true);
 }
 
 void KateSessionManagerTest::init()
 {
     m_tempdir = new QTemporaryDir;
     QVERIFY(m_tempdir->isValid());
-
-    m_manager = new KateSessionManager(this, m_tempdir->path());
+    m_store = new Kate::Session::Store(m_tempdir->path());
 }
 
 void KateSessionManagerTest::cleanup()
 {
-    delete m_manager;
+    QString cnf = QStandardPaths::locate(QStandardPaths::GenericConfigLocation, KSharedConfig::openConfig()->name());
+    if (!cnf.isEmpty()) {
+        QFile::remove(cnf);
+    }
+
     delete m_tempdir;
+    delete m_app;
 }
 
 void KateSessionManagerTest::basic()
 {
-    QCOMPARE(m_manager->sessionsDir(), m_tempdir->path());
-    QCOMPARE(m_manager->sessionList().size(), 0);
-    QVERIFY(m_manager->activateAnonymousSession());
-    QVERIFY(m_manager->activeSession());
+    /**
+     * test basic interractions between KateApp and SessionManager
+     */
+    m_app = new KateApp(arguments(), m_store);
+    KateSessionManager *manager = m_app->sessionManager();
+
+    QCOMPARE(manager->sessionList().size(), 0);
+    manager->activateNewSession();
+    QCOMPARE(manager->sessionList().size(), 1);
+    QVERIFY(manager->activeSession());
 }
 
-void KateSessionManagerTest::activateNewNamedSession()
+void KateSessionManagerTest::coldInit()
 {
+    /**
+     * Kate should create new session when initiate for the first time
+     */
+    m_app = new KateApp(arguments(), m_store);
+    QVERIFY(m_app->init());
+
+    QCOMPARE(m_store->sessions().size(), 1);
+}
+
+void KateSessionManagerTest::secondBoot()
+{
+    /**
+     * we should get the same session after rebooting kate
+     */
+    m_app = new KateApp(arguments(), m_store);
+    m_app->init();
+    m_app->sessionManager()->saveActiveSession(true);
+    QString id = m_app->sessionManager()->activeSession()->id();
+    delete m_app;
+
+    m_store = new Kate::Session::Store(m_tempdir->path());
+    QCOMPARE(m_store->sessions().size(), 1);
+
+    m_app = new KateApp(arguments(), m_store);
+    QVERIFY(m_app->init());
+    QCOMPARE(m_store->sessions().size(), 1);
+
+    QCOMPARE(m_app->sessionManager()->activeSession()->id(), id);
+}
+
+void KateSessionManagerTest::optionNewSession()
+{
+    /**
+     * starting kate with new-session option will create new session
+     */
+    m_app = new KateApp(arguments(), m_store);
+    m_app->init();
+    m_app->sessionManager()->saveActiveSession(true);
+    delete m_app;
+
+    m_store = new Kate::Session::Store(m_tempdir->path());
+    QCOMPARE(m_store->sessions().size(), 1);
+
+    m_app = new KateApp(arguments(QStringList(QLatin1String("--new-session"))), m_store);
+    QVERIFY(m_app->init());
+    QCOMPARE(m_store->sessions().size(), 2);
+}
+
+void KateSessionManagerTest::openingFiles()
+{
+    /**
+     * kate should open file in last session
+     */
+    m_app = new KateApp(arguments(), m_store);
+    m_app->init();
+    m_app->sessionManager()->saveActiveSession(true);
+    QCOMPARE(m_app->activeMainWindow()->views().size(), 1);
+    delete m_app;
+
+    m_store = new Kate::Session::Store(m_tempdir->path());
+    QTemporaryFile f;
+    f.open();
+    m_app = new KateApp(arguments(QStringList() << f.fileName()), m_store);
+    m_app->init();
+
+    QTest::qWait(0);
+
+    QCOMPARE(m_store->sessions().size(), 1);
+    QCOMPARE(m_app->activeMainWindow()->views().size(), 1);
+    QCOMPARE(m_app->activeMainWindow()->activeView()->document()->url().toLocalFile(), f.fileName());
+}
+
+void KateSessionManagerTest::openFilesInNamedSession()
+{
+    /**
+     * Kate should open files in requested named session
+     */
+    QString sessionName = QLatin1String("test");
+
+    auto s = m_store->getNewSession();
+    s->setName(sessionName);
+    m_store->releaseSession(s);
+
+    s = m_store->getNewSession();
+    s->setName(QLatin1String("extra"));
+    m_store->releaseSession(s);
+
+    QTemporaryFile f;
+    f.open();
+
+    QStringList args{QLatin1String("-s"), sessionName, f.fileName()};
+
+    m_app = new KateApp(arguments(args), m_store);
+    QVERIFY(m_app->init());
+
+    QCOMPARE(m_app->sessionManager()->activeSession()->name(), sessionName);
+}
+
+void KateSessionManagerTest::activateSessionByName()
+{
+    /**
+     * opening session by name works
+     */
     const QString sessionName = QStringLiteral("hello_world");
 
-    QVERIFY(m_manager->activateSession(sessionName, false, false));
-    QCOMPARE(m_manager->sessionList().size(), 1);
+    KateSession::Ptr s = m_store->getNewSession();
+    s->setName(sessionName);
+    m_store->releaseSession(s);
 
-    KateSession::Ptr s = m_manager->activeSession();
-    QCOMPARE(s->name(), sessionName);
-    QCOMPARE(s->isAnonymous(), false);
+    s = m_store->getNewSession();
+    s->setName(sessionName + QLatin1String("2"));
+    m_store->releaseSession(s);
 
-    const QString sessionFile = m_tempdir->path() + QLatin1Char('/') + sessionName + QLatin1String(".katesession");
-    QCOMPARE(s->config()->name(), sessionFile);
-}
+    m_app = new KateApp(arguments(), m_store);
+    m_app->init();
 
-void KateSessionManagerTest::anonymousSessionFile()
-{
-    const QString anonfile = QDir().cleanPath(m_tempdir->path() + QLatin1String("/../anonymous.katesession"));
-    QVERIFY(m_manager->activateAnonymousSession());
-    QVERIFY(m_manager->activeSession()->isAnonymous());
-    QCOMPARE(m_manager->activeSession()->config()->name(), anonfile);
-}
-
-void KateSessionManagerTest::urlizeSessionFile()
-{
-    const QString sessionName = QStringLiteral("hello world/#");
-
-    m_manager->activateSession(sessionName, false, false);
-    KateSession::Ptr s = m_manager->activeSession();
-
-    const QString sessionFile = m_tempdir->path() + QLatin1String("/hello%20world%2F%23.katesession");
-    QCOMPARE(s->config()->name(), sessionFile);
-}
-
-void KateSessionManagerTest::deleteSession()
-{
-    m_manager->activateSession(QStringLiteral("foo"));
-    KateSession::Ptr s = m_manager->activeSession();
-
-    m_manager->activateSession(QStringLiteral("bar"));
-
-    QCOMPARE(m_manager->sessionList().size(), 2);
-
-    m_manager->deleteSession(s);
-    QCOMPARE(m_manager->sessionList().size(), 1);
-}
-
-void KateSessionManagerTest::deleteActiveSession()
-{
-    m_manager->activateSession(QStringLiteral("foo"));
-    KateSession::Ptr s = m_manager->activeSession();
-
-    QCOMPARE(m_manager->sessionList().size(), 1);
-    m_manager->deleteSession(s);
-    QCOMPARE(m_manager->sessionList().size(), 1);
+    QVERIFY(m_app->sessionManager()->activeSession()->name() != sessionName);
+    m_app->sessionManager()->activateSessionByName(sessionName);
+    QCOMPARE(m_app->sessionManager()->activeSession()->name(), sessionName);
 }
 
 void KateSessionManagerTest::renameSession()
 {
-    m_manager->activateSession(QStringLiteral("foo"));
-    KateSession::Ptr s = m_manager->activeSession();
+    /**
+     * session manager is able to rename sessions
+     */
+    const QString sessionName = QLatin1String("new session name");
 
-    QCOMPARE(m_manager->sessionList().size(), 1);
+    m_app = new KateApp(arguments(), m_store);
+    m_app->init();
 
-    const QString newName = QStringLiteral("bar");
-    m_manager->renameSession(s, newName); // non-collision path
-    QCOMPARE(s->name(), newName);
-    QCOMPARE(m_manager->sessionList().size(), 1);
-    QCOMPARE(m_manager->sessionList().first(), s);
+    QCOMPARE(m_store->sessions().size(), 1);
+
+    KateSessionManager *manager = m_app->sessionManager();
+
+    QVERIFY(manager->activeSession()->name() != sessionName);
+    manager->renameSession(manager->activeSession(), sessionName);
+    QCOMPARE(manager->activeSession()->name(), sessionName);
 }
 
-void KateSessionManagerTest::saveActiveSessionWithAnynomous()
+void KateSessionManagerTest::deleteSession()
 {
-    QVERIFY(m_manager->activateAnonymousSession());
-    QVERIFY(m_manager->activeSession()->isAnonymous());
-    QVERIFY(m_manager->sessionList().empty());
+    /**
+     * it's possible to delete session which is not active
+     */
+    KateSession::Ptr s = m_store->getNewSession();
+    s->setName(QLatin1String("Session to delete"));
 
-    QCOMPARE(m_manager->saveActiveSession(), true);
-    QCOMPARE(m_manager->activeSession()->isAnonymous(), true);
-    QCOMPARE(m_manager->activeSession()->name(), QLatin1String("Anonymous"));
-    QCOMPARE(m_manager->sessionList().size(), 0);
+    m_app = new KateApp(arguments(), m_store);
+    m_app->init();
+
+    QCOMPARE(m_store->sessions().size(), 2);
+    m_app->sessionManager()->deleteSession(s);
+    QCOMPARE(m_store->sessions().size(), 1);
 }
 
+void KateSessionManagerTest::deleteLastSession()
+{
+    /**
+     * session manager won't delete last session
+     */
+    m_app = new KateApp(arguments(), m_store);
+    m_app->init();
+    KateSession::Ptr s = m_app->sessionManager()->sessionList()[0];
+    QVERIFY(!m_app->sessionManager()->deleteSession(s));
+    QCOMPARE(m_store->sessions().size(), 1);
+}
+
+#if false
+/**
+ * kateapp won't play nice when destroyed and running event loop afterwards
+ * This scenario works but only when executed as single test case in program
+ */
 void KateSessionManagerTest::deletingSessionFilesUnderRunningApp()
 {
-    m_manager->activateSession(QStringLiteral("foo"));
-    m_manager->activateSession(QStringLiteral("bar"));
+    /**
+     * kate will be ok when deleting session files under it
+     */
+    m_app = new KateApp(arguments(), m_store);
+    m_app->init();
 
-    QVERIFY(m_manager->sessionList().size() == 2);
-    QVERIFY(m_manager->activeSession()->name() == QLatin1String("bar"));
+    QString sid_other = m_app->sessionManager()->activeSession()->id();
+    m_app->sessionManager()->saveActiveSession();
 
-    const QString file = m_tempdir->path() + QLatin1String("/foo.katesession");
-    QVERIFY(QFile(file).remove());
+    m_app->sessionManager()->activateNewSession();
+    QString sid_active = m_app->sessionManager()->activeSession()->id();
+    m_app->sessionManager()->saveActiveSession();
 
-    QTRY_COMPARE_WITH_TIMEOUT(m_manager->sessionList().size(), 1, 1000); // that should be enough for KDirWatch to kick in
-    QCOMPARE(m_manager->activeSession()->name(), QLatin1String("bar"));
+    QVERIFY(sid_active != sid_other);
+    QDir dir_active(m_tempdir->filePath(sid_active)), dir_other(m_tempdir->filePath(sid_other));
+
+    QVERIFY(dir_active.exists());
+    QVERIFY(dir_other.exists());
+
+    dir_other.removeRecursively();
+    QTest::qWait(250); // ad hoc wait till the FS notification propagates
+    QCOMPARE(m_store->sessions().size(), 1);
+
+    dir_active.removeRecursively();
+    QTest::qWait(250);
+    QCOMPARE(m_store->sessions().size(), 1);
 }
+#endif
 
-void KateSessionManagerTest::startNonEmpty()
+QCommandLineParser &KateSessionManagerTest::arguments(const QStringList &args)
 {
-    m_manager->activateSession(QStringLiteral("foo"));
-    m_manager->activateSession(QStringLiteral("bar"));
+    m_parser.reset(new QCommandLineParser());
+    m_parser->addOption(QCommandLineOption(QLatin1String("encoding")));
+    m_parser->addOption(QCommandLineOption(QLatin1String("tempfile")));
+    m_parser->addOption(QCommandLineOption(QLatin1String("stdin")));
+    m_parser->addOption(QCommandLineOption(QStringList({QLatin1String("start"), QLatin1String("s")}), QString(), QLatin1String("session")));
+    m_parser->addOption(QCommandLineOption(QLatin1String("startanon")));
+    m_parser->addOption(QCommandLineOption(QLatin1String("new-session")));
 
-    KateSessionManager m(this, m_tempdir->path());
-    QCOMPARE(m.sessionList().size(), 2);
-}
-
-void KateSessionManagerTest::newSessionInheritsDefaults()
-{
-    QLatin1String pluginToTest("katekonsoleplugin");
-
-    QString sessionsDirs = m_tempdir->path() + QLatin1String("/sessions");
-
-    KateSessionManager m(this, sessionsDirs);
-    m.activateAnonymousSession();
-    m_app->pluginManager()->unloadAllPlugins();
-    m_app->pluginManager()->loadPlugin(pluginToTest);
-    m.saveDefaults();
-    m_app->pluginManager()->unloadAllPlugins();
-
-    m.activateSession(QLatin1String("test"));
-    QVERIFY(m_app->pluginManager()->isLoaded(pluginToTest));
+    m_parser->parse(QStringList(QLatin1String("kate")) + args);
+    return *(m_parser.get());
 }

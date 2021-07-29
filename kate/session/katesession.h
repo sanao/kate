@@ -90,11 +90,12 @@ public:
 
 private:
     friend class Kate::Session::Store;
+    friend class KateSessionsActionTest;
 
     /**
-     * create a session from given @file
+     * create a session from given @config
      * @param id id of session
-     * @param config if specified, the session will copy configuration from the KConfig instead of opening the file
+     * @param config config backing the session
      */
     KateSession(const QString &id, KConfig *config);
 

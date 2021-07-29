@@ -907,8 +907,8 @@ QString getRandomName()
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    std::uniform_int_distribution<> l_distrib(1, left_names.size());
-    std::uniform_int_distribution<> r_distrib(1, right_names.size());
+    std::uniform_int_distribution<> l_distrib(0, left_names.size() - 1);
+    std::uniform_int_distribution<> r_distrib(0, right_names.size() - 1);
 
     return left_names[l_distrib(gen)] + QLatin1String(" ") + right_names[r_distrib(gen)];
 }

@@ -31,16 +31,19 @@ using namespace Kate::Session;
 
 // BEGIN KateSessionManager
 
-KateSessionManager::KateSessionManager(QObject *parent, const QString &sessionsDir)
+KateSessionManager::KateSessionManager(QObject *parent, Store *store)
     : QObject(parent)
-    , m_store(Store(sessionsDir))
+    , m_store(store)
 {
-    connect(&m_store, &Store::sessionListChanged, this, &KateSessionManager::updateSessionList);
+    if (!m_store) {
+        m_store.reset(new Store());
+    }
+
+    connect(m_store.get(), &Store::sessionListChanged, this, &KateSessionManager::updateSessionList);
 }
 
 void KateSessionManager::updateSessionList()
 {
-    qDebug() << "updating sessions";
     updateJumpListActions();
     Q_EMIT sessionListChanged();
 }
@@ -87,7 +90,7 @@ bool KateSessionManager::activateSession(KateSession::Ptr session, const bool cl
     }
 
     // set the new session
-    m_store.releaseSession(m_activeSession);
+    m_store->releaseSession(m_activeSession);
     m_activeSession = session;
 
     // there is one case in which we don't want the restoration and that is
@@ -164,7 +167,7 @@ void KateSessionManager::loadSession(const KateSession::Ptr &session, bool loadD
 
 bool KateSessionManager::activateSessionByName(const QString &name)
 {
-    KateSession::Ptr s = m_store.getSessionByName(name);
+    KateSession::Ptr s = m_store->getSessionByName(name);
 
     if (!s) {
         return false;
@@ -175,7 +178,7 @@ bool KateSessionManager::activateSessionByName(const QString &name)
 
 bool KateSessionManager::activateSessionById(const QString &id, const bool closeAndSaveLast, const bool loadNew)
 {
-    KateSession::Ptr s = m_store.getSession(id);
+    KateSession::Ptr s = m_store->getSession(id);
 
     if (!s) {
         return false;
@@ -187,8 +190,8 @@ bool KateSessionManager::activateSessionById(const QString &id, const bool close
 void KateSessionManager::activateNewSession()
 {
     // FIXME: load some defaults
-    m_store.releaseSession(m_activeSession);
-    m_activeSession = m_store.getNewSession();
+    m_store->releaseSession(m_activeSession);
+    m_activeSession = m_store->getNewSession();
 
     KateApp::self()->documentManager()->closeAllDocuments();
     loadSession(m_activeSession, false);
@@ -198,7 +201,7 @@ void KateSessionManager::activateNewSession()
 void KateSessionManager::activateNewSessionFrom(const KateSession::Ptr &session)
 {
     const QString name(suggestNewSessionName(session->name()));
-    activateSession(m_store.duplicateSession(session, name));
+    activateSession(m_store->duplicateSession(session, name));
 }
 
 bool KateSessionManager::deleteSession(KateSession::Ptr session)
@@ -213,7 +216,7 @@ bool KateSessionManager::deleteSession(KateSession::Ptr session)
         c.sync();
     }
 
-    m_store.deleteSession(session);
+    m_store->deleteSession(session);
 
     return true;
 }
@@ -228,8 +231,8 @@ QString KateSessionManager::copySession(const KateSession::Ptr &session, const Q
         return name;
     }
 
-    KateSession::Ptr ns = m_store.duplicateSession(session, name);
-    m_store.sync(ns);
+    KateSession::Ptr ns = m_store->duplicateSession(session, name);
+    m_store->sync(ns);
 
     return name;
 }
@@ -240,7 +243,7 @@ QString KateSessionManager::renameSession(KateSession::Ptr session, const QStrin
 
     const QString name = askForNewSessionName(session, newName);
     session->setName(name);
-    m_store.sync(session);
+    m_store->sync(session);
     return name;
 }
 
@@ -284,7 +287,7 @@ bool KateSessionManager::saveActiveSession(bool rememberAsLast)
     }
 
     saveSessionTo(session->config());
-    m_store.sync(session);
+    m_store->sync(session);
 
     if (rememberAsLast) {
         KSharedConfigPtr c = KSharedConfig::openConfig();
@@ -310,7 +313,7 @@ bool KateSessionManager::chooseSession()
     } else {
         /* default behaviour is to restore the session if possible */
         if (!lastSession.isEmpty()) {
-            KateSession::Ptr s = m_store.getSession(lastSession);
+            KateSession::Ptr s = m_store->getSession(lastSession);
             if (s) {
                 return activateSession(s, false);
             } else {
@@ -343,9 +346,9 @@ void KateSessionManager::sessionSaveAs()
         return;
     }
 
-    m_store.sync(session);
-    KateSession::Ptr ns = m_store.duplicateSession(session, newName);
-    m_store.releaseSession(session);
+    m_store->sync(session);
+    KateSession::Ptr ns = m_store->duplicateSession(session, newName);
+    m_store->releaseSession(session);
 
     m_activeSession = ns;
     saveActiveSession();
@@ -371,7 +374,7 @@ QString KateSessionManager::askForNewSessionName(KateSession::Ptr session, const
             preset = suggestNewSessionName(session->name());
             messageTotal = messageEmpty + QLatin1String("\n\n") + messagePrompt;
 
-        } else if (m_store.sessionNameExist(name)) {
+        } else if (m_store->sessionNameExist(name)) {
             preset = suggestNewSessionName(name);
             if (preset.isEmpty()) {
                 // Very unlikely, but as fall back we keep users input
@@ -406,7 +409,7 @@ QString KateSessionManager::suggestNewSessionName(const QString &target) const
     for (int i = 2; i < 1000000; i++) { // Should be enough to get an unique name
         name = mask.arg(target).arg(i);
 
-        if (!m_store.sessionNameExist(name)) {
+        if (!m_store->sessionNameExist(name)) {
             return name;
         }
     }
@@ -454,12 +457,12 @@ bool KateSessionManager::sessionIsActive(const KateSession::Ptr session)
 
 KateSessionList KateSessionManager::sessionList()
 {
-    return m_store.sessions();
+    return m_store->sessions();
 }
 
 void KateSessionManager::updateJumpListActions() const
 {
-    QList<KateSession::Ptr> slist = m_store.sessions();
+    QList<KateSession::Ptr> slist = m_store->sessions();
     std::sort(slist.begin(), slist.end(), KateSession::compareByTimeDesc);
 
     QStringList sessionList;

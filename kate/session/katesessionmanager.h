@@ -38,7 +38,7 @@ class KATE_TESTS_EXPORT KateSessionManager : public QObject
     Q_OBJECT
 
 public:
-    KateSessionManager(QObject *parent = nullptr, const QString &sessionsDir = QString());
+    KateSessionManager(QObject *parent = nullptr, Kate::Session::Store *store = nullptr);
 
     /**
      * allow access to the session list
@@ -232,7 +232,7 @@ private:
      */
     KateSession::Ptr m_activeSession;
 
-    Kate::Session::Store m_store;
+    std::unique_ptr<Kate::Session::Store> m_store;
 };
 
 #endif

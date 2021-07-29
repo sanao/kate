@@ -10,7 +10,7 @@
 #include <unistd.h>
 #endif
 
-static const QString SessionFileName = QLatin1String("katesession");
+static const QString SessionFileName = QStringLiteral("katesession");
 
 using namespace Kate::Session;
 
