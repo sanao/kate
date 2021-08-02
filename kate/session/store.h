@@ -63,6 +63,9 @@ private:
     KateSession::Ptr readSession(const QString &id);
     QString configFileForId(const QString &id) const;
 
+    /* migration mechanism from old session storage */
+    void migrateSessions();
+
 private:
     QString m_dir;
     KDirWatch m_dirWatch;

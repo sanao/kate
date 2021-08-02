@@ -6,6 +6,9 @@
 #include <QStandardPaths>
 #include <QUuid>
 
+#include <KConfigGroup>
+#include <QUrl>
+
 #ifndef Q_OS_WIN
 #include <unistd.h>
 #endif
@@ -28,6 +31,14 @@ Store::Store(const QString &dir)
     connect(&m_dirWatch, &KDirWatch::dirty, this, &Store::reread);
 
     reread();
+
+    /* migration mechanism
+     * TODO: remove after some time
+     */
+    if (m_sessions.isEmpty()) {
+        migrateSessions();
+        reread();
+    }
 }
 
 void Store::reread()
@@ -182,4 +193,24 @@ bool Store::sessionNameExist(const QString &name) const
     });
 
     return it != m_sessions.end();
+}
+
+void Store::migrateSessions()
+{
+    QDir dir(m_dir, QStringLiteral("*.katesession"), QDir::Time);
+
+    for (unsigned int i = 0; i < dir.count(); ++i) {
+        QString sname = QUrl::fromPercentEncoding(dir[i].chopped(12).toLatin1());
+        QString file = dir.filePath(dir[i]);
+
+        KConfig c(file, KConfig::SimpleConfig);
+
+        QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        QDir(m_dir).mkpath(id);
+
+        KConfig nc;
+        c.copyTo(configFileForId(id), &nc);
+        nc.group("Meta").writeEntry("Name", sname);
+        nc.sync();
+    }
 }

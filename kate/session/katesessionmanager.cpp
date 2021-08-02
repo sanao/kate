@@ -314,6 +314,13 @@ bool KateSessionManager::chooseSession()
         /* default behaviour is to restore the session if possible */
         if (!lastSession.isEmpty()) {
             KateSession::Ptr s = m_store->getSession(lastSession);
+            /* transition mechanism from old sessions
+             * TODO: remove after some time
+             */
+            if (!s) {
+                s = m_store->getSessionByName(lastSession);
+            }
+
             if (s) {
                 return activateSession(s, false);
             } else {
