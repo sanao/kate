@@ -253,7 +253,7 @@ void KateSessionManager::saveSessionTo(KConfig *sc) const
     for (const auto &group : sc->groupList()) {
         // Don't delete groups for loaded documents that have
         // ViewSpace config in session but do not have any views.
-        if (!isViewLessDocumentViewSpaceGroup(group)) {
+        if (isViewLessDocumentViewSpaceGroup(group)) {
             sc->deleteGroup(group);
         }
     }
