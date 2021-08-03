@@ -26,7 +26,7 @@ void KateSessionsActionTest::initTestCase()
 
     // we need an application object, as session loading will trigger modifications to that
     m_app = new KateApp(QCommandLineParser());
-    m_app->sessionManager()->activateAnonymousSession();
+    m_app->sessionManager()->activateNewSession();
 }
 
 void KateSessionsActionTest::cleanupTestCase()
@@ -64,7 +64,6 @@ void KateSessionsActionTest::limit()
         m_manager->activateSession(QStringLiteral("session %1").arg(i));
     }
 
-    QCOMPARE(m_manager->activeSession()->isAnonymous(), false);
     QCOMPARE(m_manager->sessionList().size(), 14);
     QCOMPARE(m_ac->isEnabled(), true);
 

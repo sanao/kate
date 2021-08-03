@@ -42,38 +42,7 @@ void KateSessionTest::create()
     KateSession::Ptr s = KateSession::create(m_tmpfile->fileName(), name);
     QCOMPARE(s->name(), name);
     QCOMPARE((int)s->documents(), 0);
-    QCOMPARE(s->isAnonymous(), false);
     QCOMPARE(s->config()->name(), m_tmpfile->fileName());
-}
-
-void KateSessionTest::createAnonymous()
-{
-    KateSession::Ptr s = KateSession::createAnonymous(m_tmpfile->fileName());
-    QCOMPARE(s->name(), QLatin1String("Anonymous"));
-    QCOMPARE((int)s->documents(), 0);
-    QCOMPARE(s->isAnonymous(), true);
-    QCOMPARE(s->config()->name(), m_tmpfile->fileName());
-}
-
-void KateSessionTest::createAnonymousFrom()
-{
-    // Regular
-    KateSession::Ptr s = KateSession::create(m_tmpfile->fileName(), QStringLiteral("session name"));
-
-    const QString groupName = QStringLiteral("test group");
-    QTemporaryFile newFile;
-    newFile.open();
-    KateSession::Ptr ns;
-
-    s->config()->group(groupName).writeEntry("foo", "bar");
-
-    // Create Anon from Other
-    ns = KateSession::createAnonymousFrom(s, newFile.fileName());
-    QCOMPARE(ns->name(), QLatin1String("Anonymous"));
-    QCOMPARE((int)ns->documents(), 0);
-    QCOMPARE(ns->isAnonymous(), true);
-    QCOMPARE(ns->config()->name(), newFile.fileName());
-    QCOMPARE(ns->config()->group(groupName).readEntry("foo"), QLatin1String("bar"));
 }
 
 void KateSessionTest::createFrom()
@@ -92,7 +61,6 @@ void KateSessionTest::createFrom()
     ns = KateSession::createFrom(s, newFile.fileName(), newName);
     QCOMPARE(ns->name(), newName);
     QCOMPARE((int)ns->documents(), 0);
-    QCOMPARE(ns->isAnonymous(), false);
     QCOMPARE(ns->config()->name(), newFile.fileName());
     QCOMPARE(ns->config()->group(groupName).readEntry("foo"), QLatin1String("bar"));
 }

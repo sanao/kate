@@ -18,8 +18,6 @@
 
 class KConfig;
 
-static const QLatin1String AnonymousSessionName("Anonymous");
-
 class KATE_TESTS_EXPORT KateSession : public QSharedData
 {
 public:
@@ -64,14 +62,6 @@ public:
     void setDocuments(const unsigned int number);
 
     /**
-     * @return true if this is anonymous/new session
-     */
-    bool isAnonymous() const
-    {
-        return m_anonymous;
-    }
-
-    /**
      * @return path to session file
      */
     const QString &file() const;
@@ -90,8 +80,6 @@ public:
 public:
     static KateSession::Ptr create(const QString &file, const QString &name);
     static KateSession::Ptr createFrom(const KateSession::Ptr &session, const QString &file, const QString &name);
-    static KateSession::Ptr createAnonymous(const QString &file);
-    static KateSession::Ptr createAnonymousFrom(const KateSession::Ptr &session, const QString &file);
 
     static bool compareByName(const KateSession::Ptr &s1, const KateSession::Ptr &s2);
     static bool compareByTimeDesc(const KateSession::Ptr &s1, const KateSession::Ptr &s2);
@@ -116,12 +104,11 @@ private:
      * @param anonymous anonymous flag
      * @param config if specified, the session will copy configuration from the KConfig instead of opening the file
      */
-    KateSession(const QString &file, const QString &name, const bool anonymous, const KConfig *config = nullptr);
+    KateSession(const QString &file, const QString &name, const KConfig *config = nullptr);
 
 private:
     QString m_name;
     QString m_file;
-    bool m_anonymous;
     unsigned int m_documents;
     std::unique_ptr<KConfig> m_config;
     QDateTime m_timestamp;

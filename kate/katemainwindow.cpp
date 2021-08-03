@@ -460,6 +460,10 @@ void KateMainWindow::setupActions()
     a->setIcon(QIcon::fromTheme(QStringLiteral("document-save-as")));
     a->setText(i18n("Save Session &As..."));
     connect(a, &QAction::triggered, KateApp::self()->sessionManager(), &KateSessionManager::sessionSaveAs);
+    a = actionCollection()->addAction(QStringLiteral("sessions_rename"));
+    a->setIcon(QIcon::fromTheme(QStringLiteral("document-save-as")));
+    a->setText(i18n("Rename session"));
+    connect(a, &QAction::triggered, KateApp::self()->sessionManager(), &KateSessionManager::renameSessionAction);
     a = actionCollection()->addAction(QStringLiteral("sessions_manage"));
     a->setIcon(QIcon::fromTheme(QStringLiteral("view-choose")));
     a->setText(i18n("&Manage Sessions..."));

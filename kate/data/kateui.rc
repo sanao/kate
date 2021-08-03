@@ -104,6 +104,7 @@
       <Action name="sessions_save_default"/>
       <Action name="sessions_save"/>
       <Action name="sessions_save_as"/>
+      <Action name="sessions_rename"/>
     </Menu>
     <Menu name="settings">
       <text>&amp;Settings</text>

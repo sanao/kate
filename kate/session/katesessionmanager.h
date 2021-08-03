@@ -22,11 +22,6 @@ typedef QList<KateSession::Ptr> KateSessionList;
 /**
  * Takes care of session store, session activation and sesion defaults.
  *
- * There is a single implicit anonymous session that is always present, but not
- * exported outside the manager, hence not even visible to user. It's possible
- * to activate the session via KateSessionManager::activateAnonymousSession. For other
- * usecases the anonymous session behaves the same as regular one.
- *
  * The session defaults are stored in an implicit default session, which the users
  * can only overwrite via KateSessionManager::saveDefaults.
  *
@@ -59,14 +54,9 @@ public:
     bool activateSession(const QString &name, const bool closeAndSaveLast = true, const bool loadNew = true);
 
     /**
-     * activate existing anonymous session
-     */
-    bool activateAnonymousSession();
-
-    /**
      * create and activate new session and store it as anonymous
      */
-    void activateNewSession();
+    void activateNewSession(const QString &name = QString());
 
     /**
      * create and activate new session from another \p session as template
@@ -136,6 +126,11 @@ public Q_SLOTS:
      * save current configuration as session defaults
      */
     void saveDefaults();
+
+    /**
+     * ask user for new name and change it.
+     */
+    void renameSessionAction();
 
 Q_SIGNALS:
     /**
@@ -234,11 +229,6 @@ private:
      * returns session config file according to policy
      */
     QString sessionFileForName(const QString &name) const;
-
-    /**
-     * returns session file for anonymous session
-     */
-    QString anonymousSessionFile() const;
 
     /**
      * returns session file for anonymous session

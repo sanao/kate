@@ -27,7 +27,7 @@ void KateSessionManagerTest::initTestCase()
 
     // we need an application object, as session loading will trigger modifications to that
     m_app = new KateApp(QCommandLineParser());
-    m_app->sessionManager()->activateAnonymousSession();
+    m_app->sessionManager()->activateNewSession();
 }
 
 void KateSessionManagerTest::cleanupTestCase()
@@ -53,7 +53,7 @@ void KateSessionManagerTest::basic()
 {
     QCOMPARE(m_manager->sessionsDir(), m_tempdir->path());
     QCOMPARE(m_manager->sessionList().size(), 0);
-    QVERIFY(m_manager->activateAnonymousSession());
+    m_manager->activateNewSession();
     QVERIFY(m_manager->activeSession());
 }
 
@@ -66,18 +66,9 @@ void KateSessionManagerTest::activateNewNamedSession()
 
     KateSession::Ptr s = m_manager->activeSession();
     QCOMPARE(s->name(), sessionName);
-    QCOMPARE(s->isAnonymous(), false);
 
     const QString sessionFile = m_tempdir->path() + QLatin1Char('/') + sessionName + QLatin1String(".katesession");
     QCOMPARE(s->config()->name(), sessionFile);
-}
-
-void KateSessionManagerTest::anonymousSessionFile()
-{
-    const QString anonfile = QDir().cleanPath(m_tempdir->path() + QLatin1String("/../anonymous.katesession"));
-    QVERIFY(m_manager->activateAnonymousSession());
-    QVERIFY(m_manager->activeSession()->isAnonymous());
-    QCOMPARE(m_manager->activeSession()->config()->name(), anonfile);
 }
 
 void KateSessionManagerTest::urlizeSessionFile()
@@ -128,18 +119,6 @@ void KateSessionManagerTest::renameSession()
     QCOMPARE(m_manager->sessionList().first(), s);
 }
 
-void KateSessionManagerTest::saveActiveSessionWithAnynomous()
-{
-    QVERIFY(m_manager->activateAnonymousSession());
-    QVERIFY(m_manager->activeSession()->isAnonymous());
-    QVERIFY(m_manager->sessionList().empty());
-
-    QCOMPARE(m_manager->saveActiveSession(), true);
-    QCOMPARE(m_manager->activeSession()->isAnonymous(), true);
-    QCOMPARE(m_manager->activeSession()->name(), QLatin1String("Anonymous"));
-    QCOMPARE(m_manager->sessionList().size(), 0);
-}
-
 void KateSessionManagerTest::deletingSessionFilesUnderRunningApp()
 {
     m_manager->activateSession(QStringLiteral("foo"));
@@ -171,7 +150,7 @@ void KateSessionManagerTest::newSessionInheritsDefaults()
     QString sessionsDirs = m_tempdir->path() + QLatin1String("/sessions");
 
     KateSessionManager m(this, sessionsDirs);
-    m.activateAnonymousSession();
+    m.activateNewSession();
     m_app->pluginManager()->unloadAllPlugins();
     m_app->pluginManager()->loadPlugin(pluginToTest);
     m.saveDefaults();

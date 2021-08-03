@@ -22,12 +22,10 @@ private Q_SLOTS:
 
     void basic();
     void activateNewNamedSession();
-    void anonymousSessionFile();
     void urlizeSessionFile();
     void renameSession();
     void deleteActiveSession();
     void deleteSession();
-    void saveActiveSessionWithAnynomous();
 
     void deletingSessionFilesUnderRunningApp();
     void startNonEmpty();

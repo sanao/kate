@@ -20,10 +20,9 @@
 static const QLatin1String opGroupName("Open Documents");
 static const QLatin1String keyCount("Count");
 
-KateSession::KateSession(const QString &file, const QString &name, const bool anonymous, const KConfig *_config)
+KateSession::KateSession(const QString &file, const QString &name, const KConfig *_config)
     : m_name(name)
     , m_file(file)
-    , m_anonymous(anonymous)
     , m_documents(0)
 {
     Q_ASSERT(!m_file.isEmpty());
@@ -79,22 +78,12 @@ KConfig *KateSession::config()
 
 KateSession::Ptr KateSession::create(const QString &file, const QString &name)
 {
-    return Ptr(new KateSession(file, name, false));
+    return Ptr(new KateSession(file, name));
 }
 
 KateSession::Ptr KateSession::createFrom(const KateSession::Ptr &session, const QString &file, const QString &name)
 {
-    return Ptr(new KateSession(file, name, false, session->config()));
-}
-
-KateSession::Ptr KateSession::createAnonymous(const QString &file)
-{
-    return Ptr(new KateSession(file, AnonymousSessionName, true));
-}
-
-KateSession::Ptr KateSession::createAnonymousFrom(const KateSession::Ptr &session, const QString &file)
-{
-    return Ptr(new KateSession(file, AnonymousSessionName, true, session->config()));
+    return Ptr(new KateSession(file, name, session->config()));
 }
 
 bool KateSession::compareByName(const KateSession::Ptr &s1, const KateSession::Ptr &s2)

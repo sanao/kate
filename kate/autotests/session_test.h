@@ -21,8 +21,6 @@ private Q_SLOTS:
     void cleanupTestCase();
 
     void create();
-    void createAnonymous();
-    void createAnonymousFrom();
     void createFrom();
     void documents();
     void setFile();

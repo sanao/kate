@@ -19,7 +19,7 @@ LocationHistoryTest::LocationHistoryTest(QObject *parent)
     : QObject(parent)
 {
     app = new KateApp(QCommandLineParser());
-    app->sessionManager()->activateAnonymousSession();
+    app->sessionManager()->activateNewSession();
 }
 
 LocationHistoryTest::~LocationHistoryTest()
