@@ -12,6 +12,7 @@ ecm_optional_add_subdirectory(compiler-explorer)
 ecm_optional_add_subdirectory(externaltools)
 ecm_optional_add_subdirectory(filebrowser)
 ecm_optional_add_subdirectory(filetree)
+ecm_optional_add_subdirectory(dapclient) 
 ecm_optional_add_subdirectory(gdbplugin) 
 ecm_optional_add_subdirectory(git-blame) # Inline git-blame viewer
 ecm_optional_add_subdirectory(kate-ctags)
