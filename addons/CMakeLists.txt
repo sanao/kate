@@ -25,7 +25,6 @@ ecm_optional_add_subdirectory(project) # Small & smart project manager.
 ecm_optional_add_subdirectory(rainbow-parens) # Colored brackets for readability
 ecm_optional_add_subdirectory(replicode)
 ecm_optional_add_subdirectory(search)
-ecm_optional_add_subdirectory(sessionapplet)
 ecm_optional_add_subdirectory(snippets)
 ecm_optional_add_subdirectory(symbolviewer) # List symbols and functions in a file.
 ecm_optional_add_subdirectory(tabswitcher) # ALT+Tab like tab switcher.
