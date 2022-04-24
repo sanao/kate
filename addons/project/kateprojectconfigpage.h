@@ -50,6 +50,8 @@ private:
     QCheckBox *m_cbGitStatusDiffNumStat;
     QComboBox *m_cmbSingleClick;
     QComboBox *m_cmbDoubleClick;
+    QComboBox *m_cmbHeaderDoubleClick;
+    QComboBox *m_cmbHeaderSingleClick;
     KateProjectPlugin *m_plugin;
     bool m_changed = false;
 };

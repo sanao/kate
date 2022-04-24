@@ -85,7 +85,7 @@ KateProjectConfigPage::KateProjectConfigPage(QWidget *parent, KateProjectPlugin 
     vbox->addWidget(m_cbGitStatusDiffNumStat);
 
     auto hbox = new QHBoxLayout;
-    label = new QLabel(i18n("Single click action in the git status view"), this);
+    label = new QLabel(i18n("Single click on file in git status view"), this);
     m_cmbSingleClick = new QComboBox(this);
     m_cmbSingleClick->addItem(i18n("No Action"));
     m_cmbSingleClick->addItem(i18n("Show Diff"));
@@ -96,7 +96,7 @@ KateProjectConfigPage::KateProjectConfigPage(QWidget *parent, KateProjectPlugin 
     vbox->addLayout(hbox);
 
     hbox = new QHBoxLayout;
-    label = new QLabel(i18n("Double click action in the git status view"), this);
+    label = new QLabel(i18n("Double click on file in git status view"), this);
     m_cmbDoubleClick = new QComboBox(this);
     m_cmbDoubleClick->addItem(i18n("No Action"));
     m_cmbDoubleClick->addItem(i18n("Show Diff"));
@@ -104,6 +104,27 @@ KateProjectConfigPage::KateProjectConfigPage(QWidget *parent, KateProjectPlugin 
     m_cmbDoubleClick->addItem(i18n("Stage / Unstage"));
     hbox->addWidget(label);
     hbox->addWidget(m_cmbDoubleClick);
+    vbox->addLayout(hbox);
+
+    hbox = new QHBoxLayout;
+    label = new QLabel(i18n("Single click on header in git status view"), this);
+    m_cmbHeaderSingleClick = new QComboBox(this);
+    m_cmbHeaderSingleClick->addItem(i18n("No Action"));
+    m_cmbHeaderSingleClick->addItem(i18n("Show Diff"));
+    m_cmbHeaderSingleClick->addItem(i18n("Collapse / Expand"));
+    hbox->addWidget(label);
+    hbox->addWidget(m_cmbHeaderSingleClick);
+    vbox->addLayout(hbox);
+
+    hbox = new QHBoxLayout;
+    label = new QLabel(i18n("Double click on header in git status view"), this);
+    m_cmbHeaderDoubleClick = new QComboBox(this);
+    m_cmbHeaderDoubleClick->addItem(i18n("Collapse / Expand"));
+    m_cmbHeaderDoubleClick->addItem(i18n("Show Diff"));
+    m_cmbHeaderDoubleClick->addItem(i18n("Stage / Unstage"));
+    m_cmbHeaderDoubleClick->addItem(i18n("No Action"));
+    hbox->addWidget(label);
+    hbox->addWidget(m_cmbHeaderDoubleClick);
     vbox->addLayout(hbox);
 
     vbox->addStretch(1);
