@@ -739,17 +739,37 @@ void GitWidget::openCommitChangesDialog(bool amend)
 void GitWidget::handleClick(const QModelIndex &idx, ClickAction clickAction)
 {
     const auto type = idx.data(GitStatusModel::TreeItemType);
-    if (type != GitStatusModel::NodeFile) {
+
+    if (type == GitStatusModel::NodeStage) {
+        if (clickAction == ClickAction::ShowDiff) {
+            showDiff(QString(), true);
+        } else if (clickAction == ClickAction::StageUnstage) {
+            stageOrUnstage(idx, StageAction::Unstage);
+        }
         return;
     }
 
-    if (clickAction == ClickAction::NoAction) {
+    if (type == GitStatusModel::NodeChanges) {
+        if (clickAction == ClickAction::ShowDiff) {
+            showDiff(QString(), false);
+        } else if (clickAction == ClickAction::StageUnstage) {
+            stageOrUnstage(idx, StageAction::Stage);
+        }
+        return;
+    }
+
+    if (type != GitStatusModel::NodeFile) {
+        m_treeView->setExpanded(idx, !m_treeView->isExpanded(idx));
         return;
     }
 
     const QString file = m_gitPath + idx.data(GitStatusModel::FileNameRole).toString();
     const auto statusItemType = idx.data(GitStatusModel::GitItemType).value<GitStatusModel::ItemType>();
     const bool staged = statusItemType == GitStatusModel::NodeStage;
+
+    if (clickAction == ClickAction::NoAction) {
+        return;
+    }
 
     if (clickAction == ClickAction::StageUnstage) {
         if (staged) {
