@@ -36,6 +36,11 @@ class Document;
 enum class ClickAction : uint8_t;
 enum class StashMode : uint8_t;
 
+enum class StageAction : uint8_t {
+    Stage = 0,
+    Unstage,
+};
+
 class GitWidget : public QWidget
 {
     Q_OBJECT
@@ -87,6 +92,7 @@ private:
     void runPushPullCmd(const QStringList &args);
     void stage(const QStringList &files, bool = false);
     void unstage(const QStringList &files);
+    void stageOrUnstage(const QModelIndex &idx, StageAction action);
     void discard(const QStringList &files);
     void clean(const QStringList &files);
     void openAtHEAD(const QString &file);

@@ -462,6 +462,36 @@ void GitWidget::unstage(const QStringList &files)
     runGitCmd(args, i18n("Failed to unstage file. Error:"));
 }
 
+void GitWidget::stageOrUnstage(const QModelIndex &idx, StageAction action)
+{
+    const auto type = idx.data(GitStatusModel::TreeItemType);
+    if (type == GitStatusModel::NodeFile) {
+        const QString file = m_gitPath + idx.data(GitStatusModel::FileNameRole).toString();
+        action == StageAction::Stage ? stage({file}) : unstage({file});
+        return;
+    }
+
+    QVector<GitUtils::StatusItem> items;
+
+    if (type == GitStatusModel::NodeStage) {
+        items = m_model->stagedFiles();
+    } else if (type == GitStatusModel::NodeChanges) {
+        items = m_model->changedFiles();
+    } else if (type == GitStatusModel::NodeUntrack) {
+        items = m_model->untrackedFiles();
+    } else {
+        return;
+    }
+
+    QStringList files;
+    files.reserve(items.size());
+    std::transform(items.begin(), items.end(), std::back_inserter(files), [](const GitUtils::StatusItem &i) {
+        return QString::fromUtf8(i.file);
+    });
+
+    action == StageAction::Stage ? stage(files) : unstage(files);
+}
+
 void GitWidget::discard(const QStringList &files)
 {
     if (files.isEmpty()) {
