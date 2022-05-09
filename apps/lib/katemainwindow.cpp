@@ -39,6 +39,7 @@
 #include <KIO/ApplicationLauncherJob>
 #include <KIO/Job>
 #include <KIO/JobUiDelegate>
+#include <KIO/OpenUrlJob>
 #include <KLocalizedString>
 #include <KMessageBox>
 #include <KMultiTabBar>
@@ -1227,9 +1228,16 @@ void KateMainWindow::queueModifiedOnDisc(KTextEditor::Document *doc)
 
         s_modOnHdDialog = new KateMwModOnHdDialog(list, this);
         m_modignore = true;
-        connect(s_modOnHdDialog, &KateMwModOnHdDialog::requestOpenDiffDocument, KateApp::self(), [](const QUrl &url) {
+        connect(s_modOnHdDialog, &KateMwModOnHdDialog::requestOpenDiffDocument, KateApp::self(), [this](const QUrl &url) {
             // use open with isTempFile == true
-            KateApp::self()->openDocUrl(url, QString(), true);
+            if (/*someOptionUseExternDiffTool*/ true) {
+                auto *job = new KIO::OpenUrlJob(url, QStringLiteral("text/x-patch"));
+                job->setUiDelegate(new KIO::JobUiDelegate(KJobUiDelegate::AutoHandlingEnabled, this));
+                job->setDeleteTemporaryFile(true);
+                job->start();
+            } else {
+                KateApp::self()->openDocUrl(url, QString(), true);
+            }
         });
 
         // Someone modified a doc outside and now we are here
