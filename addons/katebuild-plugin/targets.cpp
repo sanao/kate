@@ -23,6 +23,7 @@ TargetsUi::TargetsUi(QObject *view, QWidget *parent)
     targetCombo = new QComboBox(this);
     targetCombo->setToolTip(i18n("Select active target set"));
     targetCombo->setModel(&proxyModel);
+    targetCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     targetLabel->setBuddy(targetCombo);
 
     targetFilterEdit = new QLineEdit(this);
