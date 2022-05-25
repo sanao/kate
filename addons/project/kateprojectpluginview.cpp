@@ -824,6 +824,10 @@ void KateProjectPluginView::showDiffInFixedView(const QByteArray &contents)
     if (!m_fixedView.view) {
         m_fixedView.view = mainWindow()->openUrl(QUrl());
         m_fixedView.defaultMenu = m_fixedView.view->contextMenu();
+        // Ensure spellcheck is disabled, that would only cause unneeded distraction
+        auto act = m_fixedView.view->action("tools_toggle_automatic_spell_checking");
+        act->setChecked(true);
+        act->trigger();
     }
 
     m_fixedView.view->document()->setText(QString::fromUtf8(contents));
