@@ -320,9 +320,14 @@ public:
         return QString();
     }
 
-    QObject *projectPluginView()
+    QObject *projectPluginView(KTextEditor::MainWindow *mainWindow = nullptr)
     {
-        return m_mainWindow->pluginView(QStringLiteral("kateprojectplugin"));
+        // sometimes any mainwindow will do (if we need project plugin dependent info)
+        // in other cases it might depend on mainwindow, e.g. current view active project
+        if (!mainWindow) {
+            mainWindow = m_mainWindow;
+        }
+        return mainWindow->pluginView(QStringLiteral("kateprojectplugin"));
     }
 
     QString documentLanguageId(const QString mode)
@@ -558,7 +563,8 @@ private:
             return nullptr;
         }
 
-        QObject *projectView = projectPluginView();
+        // use mainwindow of specified view (rather than fallback mainwindow)
+        QObject *projectView = projectPluginView(view->mainWindow());
         // preserve raw QString value so it can be used and tested that way below
         const auto projectBase = projectView ? projectView->property("projectBaseDir").toString() : QString();
         const auto &projectMap = projectView ? projectView->property("projectMap").toMap() : QVariantMap();
